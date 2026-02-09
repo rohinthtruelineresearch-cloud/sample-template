@@ -83,6 +83,21 @@ cron.schedule('0 0 * * *', async () => {
   io.emit('system_alert', 'Daily cleanup: Chat history has been cleared.');
 });
 
+// 5. Keep-Alive: Ping server every 14 minutes to prevent sleep on Render
+// Runs every 14 minutes to keep the server active
+cron.schedule('*/14 * * * *', async () => {
+  try {
+    const https = require('https');
+    https.get('https://sample-template-bxgm.onrender.com/health', (res) => {
+      console.log(`Keep-Alive ping: ${res.statusCode}`);
+    }).on('error', (err) => {
+      console.log('Keep-Alive ping failed:', err.message);
+    });
+  } catch (error) {
+    console.log('Keep-Alive error:', error.message);
+  }
+});
+
 // Start Server
 const PORT = 5000;
 server.listen(PORT, () => {
