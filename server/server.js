@@ -37,6 +37,7 @@ const chatSchema = new mongoose.Schema({
   timestamp: { type: Date, default: Date.now }
 });
 const Chat = mongoose.model('Chat', chatSchema);
+console.log('Chat model loaded');
 
 
 // Middleware
