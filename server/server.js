@@ -36,7 +36,7 @@ const chatSchema = new mongoose.Schema({
   text: String,
   timestamp: { type: Date, default: Date.now }
 });
-});
+
 
 // Middleware
 app.use(express.json());
