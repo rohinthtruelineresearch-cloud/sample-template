@@ -1,15 +1,14 @@
 {
-  "name": "notepad-messenger-server",
+  "name": "notepad-chat-root",
   "version": "1.0.0",
-  "description": "Backend for Notepad Messenger",
-  "main": "server.js",
+  "description": "Root package for Notepad Messenger",
   "scripts": {
-    "start": "node server.js"
+    "start": "concurrently \"npm run start:backend\" \"npm run start:desktop\"",
+    "start:backend": "npm start --prefix server",
+    "start:desktop": "npm start --prefix app",
+    "setup": "npm install && npm install --prefix server && npm install --prefix app"
   },
-  "dependencies": {
-    "express": "^4.18.2",
-    "mongoose": "^8.0.3",
-    "socket.io": "^4.7.2",
-    "node-cron": "^3.0.3"
+  "devDependencies": {
+    "concurrently": "^8.2.2"
   }
 }

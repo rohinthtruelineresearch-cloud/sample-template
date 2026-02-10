@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Notepad Messenger</title>
+    <style>
+        /* Notepad Design - Enhanced with Features */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: #ffffff;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            overflow: hidden;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+        }
+
+        #app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            background: var(--bg-color, #ffffff);
+            transition: background 0.3s;
+        }
+
+        /* Header - Drag Region */
+        header {
+            background: #f5f5f5;
+            padding: 12px 15px;
+            border-bottom: 1px solid #ddd;
+            -webkit-app-region: drag;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: move;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            -webkit-app-region: no-drag;
+        }
+
+        .avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #ffcc00;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            cursor: pointer;
+            overflow: hidden;
+        }
+
+        .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 14px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .header-icons {
+            display: flex;
+            gap: 10px;
+            -webkit-app-region: no-drag;
+        }
+
+        .icon-btn {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            padding: 5px;
+            font-size: 16px;
+            color: #333;
+        }
+
+        .icon-btn:hover {
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 4px;
+        }
+
+        .controls {
+            -webkit-app-region: no-drag;
+        }
+
+        .controls span {
+            margin-left: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            padding: 5px;
+        }
+
+        .controls span:hover {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+        }
+
+        /* Search Bar */
+        #search-bar {
+            padding: 8px;
+            background: #f9f9f9;
+            border-bottom: 1px solid #ddd;
+            display: none;
+        }
+
+        #search-bar.show {
+            display: block;
+        }
+
+        #search-input {
+            width: 100%;
+            padding: 6px 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 13px;
+            outline: none;
+            font-family: inherit;
+        }
+
+        /* Chat Area */
+        #chat-content {
+            flex: 1;
+            padding: 15px 20px;
+            overflow-y: auto;
+            background: var(--bg-color, #ffffff);
+            line-height: 24px;
+            font-size: 14px;
+            color: #333;
+        }
+
+        .message {
+            margin-bottom: 8px;
+            padding: 0;
+            background: transparent;
+            max-width: 100%;
+            word-wrap: break-word;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+
+        .message.sent,
+        .message.received {
+            background: transparent;
+            margin-left: 0;
+            margin-right: 0;
+            text-align: left;
+        }
+
+        .message .user {
+            font-weight: 600;
+            color: #333;
+            font-size: 13px;
+            margin-bottom: 2px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .user-avatar-small {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #ffcc00;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .user-avatar-small img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .message .text {
+            color: #333;
+            font-size: 14px;
+            line-height: 20px;
+            margin: 2px 0;
+        }
+
+        .timestamp {
+            font-size: 11px;
+            color: #999;
+            margin-top: 2px;
+        }
+
+        /* Input Area */
+        footer {
+            padding: 5px;
+            background: #eee;
+            display: flex;
+            border-top: 1px solid #ccc;
+        }
+
+        .emoji-btn {
+            background: transparent;
+            border: none;
+            font-size: 1.3rem;
+            cursor: pointer;
+            padding: 5px 8px;
+            margin-left: 0;
+            margin-right: 5px;
+        }
+
+        .emoji-btn:hover {
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 4px;
+        }
+
+        input {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-family: inherit;
+        }
+
+        button {
+            margin-left: 5px;
+            padding: 8px 12px;
+            background: #ffcc00;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background: #e6b800;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 3px;
+        }
+
+        /* Emoji Picker */
+        .emoji-picker {
+            position: absolute;
+            bottom: 60px;
+            left: 10px;
+            background: #fff;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 10px;
+            display: none;
+            max-width: 280px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+        }
+
+        .emoji-picker.show {
+            display: block;
+        }
+
+        .emoji-grid {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 5px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .emoji-item {
+            font-size: 1.3rem;
+            cursor: pointer;
+            padding: 5px;
+            text-align: center;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+
+        .emoji-item:hover {
+            background: #f0f0f0;
+        }
+
+        /* Menu Dropdown */
+        .menu-dropdown {
+            position: absolute;
+            top: 50px;
+            right: 10px;
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            display: none;
+            z-index: 1500;
+            min-width: 150px;
+        }
+
+        .menu-dropdown.show {
+            display: block;
+        }
+
+        .menu-item {
+            padding: 10px 15px;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 13px;
+        }
+
+        .menu-item:last-child {
+            border-bottom: none;
+        }
+
+        .menu-item:hover {
+            background: #f6f6f6;
+        }
+
+        /* Modal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            width: 90%;
+            max-width: 350px;
+            border-radius: 8px;
+            overflow: hidden;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            background: #f5f5f5;
+            border-bottom: 1px solid #ddd;
+            padding: 12px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            font-size: 16px;
+            color: #333;
+        }
+
+        .close-btn {
+            background: transparent;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            width: auto;
+            height: auto;
+            color: #333;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .profile-section {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .profile-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: #ffcc00;
+            margin: 0 auto 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 50px;
+            cursor: pointer;
+            overflow: hidden;
+        }
+
+        .profile-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .edit-avatar-btn {
+            font-size: 12px;
+            color: #666;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 13px;
+            color: #666;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 13px;
+            font-family: inherit;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        .save-btn {
+            width: 100%;
+            background: #ffcc00;
+            color: #333;
+            padding: 10px;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        .save-btn:hover {
+            background: #e6b800;
+        }
+
+        .settings-section {
+            margin-bottom: 20px;
+        }
+
+        .settings-section h3 {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .setting-item {
+            padding: 12px;
+            background: #f6f6f6;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+        }
+
+        .setting-item:hover {
+            background: #e8e8e8;
+        }
+
+        .background-options {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .bg-option {
+            height: 60px;
+            border-radius: 4px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: border 0.2s;
+        }
+
+        .bg-option.selected {
+            border-color: #ffcc00;
+        }
+
+        .bg-default {
+            background: #ffffff;
+            border: 1px solid #ccc;
+        }
+
+        .bg-light-yellow {
+            background: #fffef0;
+        }
+
+        .bg-light-blue {
+            background: #f0f8ff;
+        }
+
+        .bg-light-green {
+            background: #f0fff0;
+        }
+
+        .bg-light-pink {
+            background: #fff0f5;
+        }
+
+        .bg-dark {
+            background: #1a1a1a;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app-container">
+        <header>
+            <div class="header-left">
+                <div class="avatar" id="header-avatar" onclick="openProfile()">
+                    👤
+                </div>
+                <h1>📝 Notepad Chat</h1>
+            </div>
+            <div class="header-icons">
+                <button class="icon-btn" onclick="toggleSearch()" title="Search">🔍</button>
+                <button class="icon-btn" onclick="toggleMenu()" title="Menu">⋮</button>
+                <div class="controls">
+                    <span onclick="minimizeWindow()">_</span>
+                    <span onclick="window.close()">X</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Search Bar -->
+        <div id="search-bar">
+            <input type="text" id="search-input" placeholder="Search messages..." oninput="searchMessages()">
+        </div>
+
+        <!-- Menu Dropdown -->
+        <div id="menu-dropdown" class="menu-dropdown">
+            <div class="menu-item" onclick="openProfile()">👤 Profile</div>
+            <div class="menu-item" onclick="openSettings()">⚙️ Settings</div>
+            <div class="menu-item" onclick="clearChat()">🗑️ Clear Chat</div>
+        </div>
+
+        <div id="chat-content">
+            <!-- Messages from Socket.IO go here -->
+        </div>
+
+        <footer>
+            <button class="emoji-btn" onclick="toggleEmojiPicker()">😊</button>
+            <input type="text" id="msg-input" placeholder="Type a message..." autofocus>
+            <button onclick="sendMessage()">Send</button>
+        </footer>
+
+        <!-- Emoji Picker Popup -->
+        <div id="emoji-picker" class="emoji-picker">
+            <div class="emoji-grid" id="emoji-grid"></div>
+        </div>
+    </div>
+
+    <!-- Profile Modal -->
+    <div id="profile-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Profile</h2>
+                <button class="close-btn" onclick="closeProfile()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="profile-section">
+                    <div class="profile-avatar" id="profile-avatar"
+                        onclick="document.getElementById('avatar-input').click()">
+                        👤
+                    </div>
+                    <div class="edit-avatar-btn">Click to change avatar</div>
+                    <input type="file" id="avatar-input" accept="image/*" style="display: none;"
+                        onchange="uploadAvatar(event)">
+                </div>
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="username-input" placeholder="Enter your name">
+                </div>
+                <div class="form-group">
+                    <label>Bio / About</label>
+                    <textarea id="bio-input" placeholder="Hey there! I'm using Notepad Messenger"></textarea>
+                </div>
+                <button class="save-btn" onclick="saveProfile()">Save Profile</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Settings</h2>
+                <button class="close-btn" onclick="closeSettings()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="settings-section">
+                    <h3>Background</h3>
+                    <div class="background-options">
+                        <div class="bg-option bg-default" onclick="changeBackground('default')" data-bg="default"></div>
+                        <div class="bg-option bg-light-yellow" onclick="changeBackground('light-yellow')"
+                            data-bg="light-yellow"></div>
+                        <div class="bg-option bg-light-blue" onclick="changeBackground('light-blue')"
+                            data-bg="light-blue"></div>
+                        <div class="bg-option bg-light-green" onclick="changeBackground('light-green')"
+                            data-bg="light-green"></div>
+                        <div class="bg-option bg-light-pink" onclick="changeBackground('light-pink')"
+                            data-bg="light-pink"></div>
+                        <div class="bg-option bg-dark" onclick="changeBackground('dark')" data-bg="dark"></div>
+                    </div>
+                </div>
+                <div class="settings-section">
+                    <h3>Actions</h3>
+                    <div class="setting-item" onclick="clearChat()">
+                        🗑️ Clear All Chats
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Electron Renderer + Socket Code
+        const { io } = require("socket.io-client");
+        const { ipcRenderer } = require("electron");
+        const path = require("path");
+
+        // Connect to Deployed Backend
+        const socket = io("https://sample-template-bxgm.onrender.com");
+
+        const chatContent = document.getElementById('chat-content');
+        const input = document.getElementById('msg-input');
+        const roomId = 'global-room';
+
+        // User Profile Data
+        let userProfile = JSON.parse(localStorage.getItem('userProfile')) || {
+            username: `User_${Math.floor(Math.random() * 1000)}`,
+            bio: "Hey there! I'm using Notepad Messenger",
+            avatar: null
+        };
+
+        let username = userProfile.username;
+        let allMessages = [];
+        let currentBackground = localStorage.getItem('chatBackground') || 'default';
+
+        // Initialize
+        window.onload = () => {
+            loadUserProfile();
+            applyBackground(currentBackground);
+            highlightSelectedBackground();
+        };
+
+        // Window Controls
+        function minimizeWindow() {
+            ipcRenderer.send('minimize-window');
+        }
+
+        // Emoji Picker
+        const emojis = [
+            '😀', '😃', '😄', '😁', '😆', '😅', '😂', '🤣',
+            '😊', '😇', '🙂', '🙃', '😉', '😌', '😍', '🥰',
+            '😘', '😗', '😙', '😚', '😋', '😛', '😝', '😜',
+            '🤪', '🤨', '🧐', '🤓', '😎', '🤩', '🥳', '😏',
+            '😒', '😞', '😔', '😟', '😕', '🙁', '☹️', '😣',
+            '😖', '😫', '😩', '🥺', '😢', '😭', '😤', '😠',
+            '😡', '🤬', '🤯', '😳', '🥵', '🥶', '😱', '😨',
+            '😰', '😥', '😓', '🤗', '🤔', '🤭', '🤫', '🤥',
+            '👍', '👎', '👌', '✌️', '🤞', '🤟', '🤘', '🤙',
+            '👏', '🙌', '👐', '🤲', '🤝', '🙏', '✍️', '💪',
+            '❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍',
+            '💔', '❣️', '💕', '💞', '💓', '💗', '💖', '💘',
+            '🎉', '🎊', '🎈', '🎁', '🏆', '🥇', '🥈', '🥉',
+            '⭐', '🌟', '✨', '💫', '🔥', '💯', '✅', '❌'
+        ];
+
+        const emojiPicker = document.getElementById('emoji-picker');
+        const emojiGrid = document.getElementById('emoji-grid');
+
+        // Populate emoji grid
+        emojis.forEach(emoji => {
+            const span = document.createElement('span');
+            span.className = 'emoji-item';
+            span.textContent = emoji;
+            span.onclick = () => insertEmoji(emoji);
+            emojiGrid.appendChild(span);
+        });
+
+        function toggleEmojiPicker() {
+            emojiPicker.classList.toggle('show');
+        }
+
+        function insertEmoji(emoji) {
+            input.value += emoji;
+            input.focus();
+            emojiPicker.classList.remove('show');
+        }
+
+        // Close emoji picker and menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.emoji-picker') && !e.target.closest('.emoji-btn')) {
+                emojiPicker.classList.remove('show');
+            }
+            if (!e.target.closest('.menu-dropdown') && !e.target.closest('.icon-btn')) {
+                document.getElementById('menu-dropdown').classList.remove('show');
+            }
+        });
+
+        // Socket Handlers
+        socket.emit('join_room', { roomId, username });
+
+        socket.on('history', (messages) => {
+            allMessages = messages;
+            renderMessages(messages);
+        });
+
+        socket.on('receive_message', (msg) => {
+            allMessages.push(msg);
+            addMessageToUI(msg);
+            // Show notification if message is from someone else
+            showNotification(msg);
+        });
+
+        socket.on('system_alert', (text) => {
+            const div = document.createElement('div');
+            div.style.textAlign = 'center';
+            div.style.color = 'red';
+            div.textContent = text;
+            chatContent.appendChild(div);
+        });
+
+        socket.on('chat_cleared', () => {
+            chatContent.innerHTML = '';
+            allMessages = [];
+        });
+
+        // Send Message
+        function sendMessage() {
+            const text = input.value.trim();
+            if (!text) return;
+
+            const msgData = {
+                roomId,
+                sender: username,
+                text: text,
+                timestamp: new Date(),
+                avatar: userProfile.avatar
+            };
+
+            socket.emit('send_message', msgData);
+            input.value = '';
+        }
+
+        // Enter Key
+        input.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+
+        // Render Messages
+        function renderMessages(messages) {
+            chatContent.innerHTML = '';
+            messages.forEach(msg => addMessageToUI(msg));
+        }
+
+        function addMessageToUI(msg) {
+            const div = document.createElement('div');
+            const isMe = msg.sender === username;
+            div.className = `message ${isMe ? 'sent' : 'received'}`;
+
+            const time = new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+            const avatarHTML = msg.avatar ? `<img src="${msg.avatar}" alt="">` : (msg.sender.charAt(0).toUpperCase());
+
+            div.innerHTML = `
+                <div class="user">
+                    <div class="user-avatar-small">${avatarHTML}</div>
+                    ${escapeHtml(msg.sender)}
+                </div>
+                <div class="text">${escapeHtml(msg.text)}</div>
+                <div class="timestamp">${time}</div>
+            `;
+
+            chatContent.appendChild(div);
+            chatContent.scrollTop = chatContent.scrollHeight;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Profile Functions
+        function loadUserProfile() {
+            document.getElementById('username-input').value = userProfile.username;
+            document.getElementById('bio-input').value = userProfile.bio;
+
+            if (userProfile.avatar) {
+                document.getElementById('header-avatar').innerHTML = `<img src="${userProfile.avatar}" alt="">`;
+                document.getElementById('profile-avatar').innerHTML = `<img src="${userProfile.avatar}" alt="">`;
+            }
+        }
+
+        function openProfile() {
+            loadUserProfile();
+            document.getElementById('profile-modal').classList.add('show');
+            toggleMenu();
+        }
+
+        function closeProfile() {
+            document.getElementById('profile-modal').classList.remove('show');
+        }
+
+        function uploadAvatar(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const avatarData = e.target.result;
+                userProfile.avatar = avatarData;
+                document.getElementById('header-avatar').innerHTML = `<img src="${avatarData}" alt="">`;
+                document.getElementById('profile-avatar').innerHTML = `<img src="${avatarData}" alt="">`;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function saveProfile() {
+            const newUsername = document.getElementById('username-input').value.trim();
+            const newBio = document.getElementById('bio-input').value.trim();
+
+            if (newUsername) {
+                userProfile.username = newUsername;
+                username = newUsername;
+            }
+            userProfile.bio = newBio;
+
+            localStorage.setItem('userProfile', JSON.stringify(userProfile));
+            closeProfile();
+
+            alert('✅ Profile saved successfully!');
+        }
+
+        // Settings Functions
+        function openSettings() {
+            document.getElementById('settings-modal').classList.add('show');
+            highlightSelectedBackground();
+            toggleMenu();
+        }
+
+        function closeSettings() {
+            document.getElementById('settings-modal').classList.remove('show');
+        }
+
+        function changeBackground(bgType) {
+            currentBackground = bgType;
+            localStorage.setItem('chatBackground', bgType);
+            applyBackground(bgType);
+            highlightSelectedBackground();
+        }
+
+        function applyBackground(bgType) {
+            const container = document.getElementById('app-container');
+            const chatContent = document.getElementById('chat-content');
+
+            const backgrounds = {
+                'default': '#ffffff',
+                'light-yellow': '#fffef0',
+                'light-blue': '#f0f8ff',
+                'light-green': '#f0fff0',
+                'light-pink': '#fff0f5',
+                'dark': '#1a1a1a'
+            };
+
+            const bg = backgrounds[bgType] || backgrounds.default;
+            container.style.setProperty('--bg-color', bg);
+            chatContent.style.background = bg;
+
+            // Adjust text color for dark mode
+            if (bgType === 'dark') {
+                chatContent.style.color = '#e0e0e0';
+                document.querySelectorAll('.message .user').forEach(el => el.style.color = '#e0e0e0');
+                document.querySelectorAll('.message .text').forEach(el => el.style.color = '#e0e0e0');
+            } else {
+                chatContent.style.color = '#333';
+                document.querySelectorAll('.message .user').forEach(el => el.style.color = '#333');
+                document.querySelectorAll('.message .text').forEach(el => el.style.color = '#333');
+            }
+        }
+
+        function highlightSelectedBackground() {
+            document.querySelectorAll('.bg-option').forEach(option => {
+                option.classList.remove('selected');
+                if (option.dataset.bg === currentBackground) {
+                    option.classList.add('selected');
+                }
+            });
+        }
+
+        // Search Functions
+        function toggleSearch() {
+            const searchBar = document.getElementById('search-bar');
+            searchBar.classList.toggle('show');
+            if (searchBar.classList.contains('show')) {
+                document.getElementById('search-input').focus();
+            } else {
+                document.getElementById('search-input').value = '';
+                renderMessages(allMessages);
+            }
+        }
+
+        function searchMessages() {
+            const query = document.getElementById('search-input').value.toLowerCase();
+            if (!query) {
+                renderMessages(allMessages);
+                return;
+            }
+
+            const filtered = allMessages.filter(msg =>
+                msg.text.toLowerCase().includes(query) ||
+                msg.sender.toLowerCase().includes(query)
+            );
+            renderMessages(filtered);
+        }
+
+        // Clear Chat
+        function clearChat() {
+            if (confirm('Are you sure you want to clear all messages? This will delete them from the database permanently for all users.')) {
+                // Emit clear_chat event to server
+                socket.emit('clear_chat', { roomId });
+                closeSettings();
+                toggleMenu();
+            }
+        }
+
+        // Menu
+        function toggleMenu() {
+            document.getElementById('menu-dropdown').classList.toggle('show');
+        }
+
+        // Desktop Notifications
+        function showNotification(msg) {
+            // Don't notify for own messages
+            if (msg.sender === username) return;
+
+            // Create native notification
+            const notification = new Notification('💬 Notepad Messenger', {
+                body: `${msg.sender}: ${msg.text}`,
+                silent: false,
+                urgency: 'normal'
+            });
+
+            // Click notification to focus window
+            notification.onclick = () => {
+                ipcRenderer.send('focus-window');
+            };
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Notepad Messenger</string>
+    <string name="title_activity_main">Notepad Messenger</string>
+    <string name="package_name">com.notepad.messenger</string>
+    <string name="custom_url_scheme">com.notepad.messenger</string>
+</resources>

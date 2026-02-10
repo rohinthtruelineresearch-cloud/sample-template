@@ -1,0 +1,34 @@
+{
+  "name": "notepad-messenger-app",
+  "version": "1.0.0",
+  "description": "Desktop Overlay App",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win"
+  },
+  "dependencies": {
+    "socket.io-client": "^4.7.2"
+  },
+  "devDependencies": {
+    "electron": "^28.1.0",
+    "electron-builder": "^24.9.1"
+  },
+  "build": {
+    "appId": "com.notepad.messenger",
+    "productName": "NotepadMessenger",
+    "directories": {
+      "output": "release"
+    },
+    "win": {
+      "target": "nsis",
+      "verifyUpdateCodeSignature": false,
+      "sign": null
+    },
+    "nsis": {
+        "oneClick": false,
+        "perMachine": false,
+        "allowToChangeInstallationDirectory": true
+    }
+  }
+}
