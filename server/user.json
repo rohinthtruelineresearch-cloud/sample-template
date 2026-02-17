@@ -1,0 +1,29 @@
+[
+  {
+    "userId": "user_7063",
+    "username": "Guest",
+    "avatar": "",
+    "status": "Available",
+    "_id": "local_dukh1mkl8",
+    "timestamp": "2026-02-11T11:00:47.730Z",
+    "createdAt": "2026-02-11T11:00:47.730Z"
+  },
+  {
+    "userId": "user_29370",
+    "username": "alice",
+    "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=alice",
+    "status": "insta",
+    "_id": "local_bxch7f33u",
+    "timestamp": "2026-02-11T11:01:38.594Z",
+    "createdAt": "2026-02-11T11:01:38.594Z"
+  },
+  {
+    "userId": "user_85308",
+    "username": "np",
+    "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=np",
+    "status": "chat",
+    "_id": "local_ma907c09p",
+    "timestamp": "2026-02-11T11:04:33.085Z",
+    "createdAt": "2026-02-11T11:04:33.085Z"
+  }
+]

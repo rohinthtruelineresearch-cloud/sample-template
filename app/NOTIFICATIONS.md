@@ -186,7 +186,6 @@ Electron apps have **automatic notification permissions** on Windows. No user ap
 3. **Notification Grouping** - Group multiple messages
 4. **Rich Notifications** - Add action buttons (Reply, Mute, etc.)
 5. **Badges** - Show unread count on app icon
-6. **Flash Window** - Blink taskbar when new message arrives
 7. **Auto-close** - Dismiss notification after X seconds
 
 ## 📝 Notes

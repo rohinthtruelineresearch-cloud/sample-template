@@ -1,6 +1,6 @@
 {
   "name": "notepad-messenger-app",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "description": "Desktop Overlay App",
   "main": "main.js",
   "scripts": {
@@ -23,7 +23,8 @@
     "win": {
       "target": "nsis",
       "verifyUpdateCodeSignature": false,
-      "sign": null
+      "sign": null,
+      "icon": "assets/icon.png"
     },
     "nsis": {
         "oneClick": false,

@@ -34,6 +34,10 @@ const chatSchema = new mongoose.Schema({
   senderId: String, // Unique user ID
   avatar: String, // Sender's avatar
   text: String,
+  replyTo: { // Quoted message context
+    sender: String,
+    text: String
+  },
   timestamp: { type: Date, default: Date.now }
 });
 const Chat = mongoose.model('Chat', chatSchema);
@@ -131,7 +135,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('send_message', async (data) => {
-    const { roomId, sender, senderId, avatar, text } = data;
+    const { roomId, sender, senderId, avatar, text, replyTo } = data;
     
     try {
       // Save message to database
@@ -139,8 +143,10 @@ io.on('connection', (socket) => {
         roomId,
         sender,
         senderId,
+        senderId,
         avatar: avatar || '👤',
         text,
+        replyTo,
         timestamp: new Date()
       });
       
@@ -154,6 +160,7 @@ io.on('connection', (socket) => {
         senderId: newMsg.senderId,
         avatar: newMsg.avatar,
         text: newMsg.text,
+        replyTo: newMsg.replyTo,
         timestamp: newMsg.timestamp
       });
     } catch (error) {

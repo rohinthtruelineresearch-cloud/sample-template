@@ -3,347 +3,691 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Notepad Messenger</title>
-    <style>
-        /* Notepad Design - Enhanced with Features */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+
+    <!-- ========================================= -->
+    <!-- 🎨 1. WHATSAPP THEME CSS                  -->
+    <!-- ========================================= -->
+    <style id="whatsapp-css">
+        :root {
+            --wa-header: rgba(7, 94, 84, var(--bg-opacity, 1));
+            --wa-bg: rgba(229, 221, 213, var(--bg-opacity, 1));
+            --wa-input-bg: rgba(240, 240, 240, var(--bg-opacity, 1));
+            --wa-sent: rgba(220, 248, 198, var(--bg-opacity, 1));
+            --wa-received: rgba(255, 255, 255, var(--bg-opacity, 1));
         }
 
-        body {
+        body.whatsapp-mode {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: #d1d7db;
             margin: 0;
-            padding: 0;
-            background: #ffffff;
-            font-family: 'Segoe UI', Arial, sans-serif;
             overflow: hidden;
-            border: 1px solid #ccc;
-            border-radius: 8px;
         }
 
-        #app-container {
+        body.whatsapp-mode #app-container {
             display: flex;
             flex-direction: column;
             height: 100vh;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            background: var(--bg-color, #ffffff);
+            background: rgba(229, 221, 213, var(--bg-opacity, 1));
+            backdrop-filter: blur(8px);
             transition: background 0.3s;
         }
 
-        /* Header - Drag Region */
-        header {
-            background: #f5f5f5;
-            padding: 12px 15px;
-            border-bottom: 1px solid #ddd;
-            -webkit-app-region: drag;
+        /* Header */
+        body.whatsapp-mode header {
+            background: var(--wa-header);
+            color: white;
+            padding: 10px 15px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            cursor: move;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+            z-index: 10;
+            -webkit-app-region: drag;
+            height: 60px;
         }
 
-        .header-left {
+        body.whatsapp-mode .header-left {
             display: flex;
             align-items: center;
             gap: 10px;
-            -webkit-app-region: no-drag;
         }
 
-        .avatar {
-            width: 32px;
-            height: 32px;
+        body.whatsapp-mode .notepad-menubar {
+            display: none;
+        }
+
+        /* Hide Notepad Menu */
+
+        body.whatsapp-mode .avatar {
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
-            background: #ffcc00;
+            background: #128c7e;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 16px;
             cursor: pointer;
             overflow: hidden;
+            -webkit-app-region: no-drag;
         }
 
-        .avatar img {
+        body.whatsapp-mode .avatar img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
 
-        header h1 {
-            margin: 0;
-            font-size: 14px;
-            color: #333;
-            font-weight: 500;
-        }
-
-        .header-icons {
+        body.whatsapp-mode .header-icons {
             display: flex;
-            gap: 10px;
+            gap: 15px;
+            align-items: center;
             -webkit-app-region: no-drag;
         }
 
-        .icon-btn {
+        body.whatsapp-mode .icon-btn {
             background: transparent;
             border: none;
+            color: white;
+            font-size: 20px;
             cursor: pointer;
             padding: 5px;
-            font-size: 16px;
-            color: #333;
-        }
-
-        .icon-btn:hover {
-            background: rgba(0, 0, 0, 0.05);
-            border-radius: 4px;
-        }
-
-        .controls {
-            -webkit-app-region: no-drag;
-        }
-
-        .controls span {
-            margin-left: 10px;
-            cursor: pointer;
-            font-weight: bold;
-            padding: 5px;
-        }
-
-        .controls span:hover {
-            background: rgba(0, 0, 0, 0.1);
-            border-radius: 4px;
-        }
-
-        /* Search Bar */
-        #search-bar {
-            padding: 8px;
-            background: #f9f9f9;
-            border-bottom: 1px solid #ddd;
-            display: none;
-        }
-
-        #search-bar.show {
-            display: block;
-        }
-
-        #search-input {
-            width: 100%;
-            padding: 6px 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-size: 13px;
-            outline: none;
-            font-family: inherit;
         }
 
         /* Chat Area */
-        #chat-content {
+        body.whatsapp-mode #chat-content {
             flex: 1;
-            padding: 15px 20px;
+            padding: 10px;
             overflow-y: auto;
-            background: var(--bg-color, #ffffff);
-            line-height: 24px;
-            font-size: 14px;
-            color: #333;
+            position: relative;
         }
 
-        .message {
+        body.whatsapp-mode .message-container {
+            display: flex;
+            flex-direction: column;
             margin-bottom: 8px;
-            padding: 0;
-            background: transparent;
-            max-width: 100%;
-            word-wrap: break-word;
-            font-family: 'Segoe UI', Arial, sans-serif;
+            max-width: 65%;
+            position: relative;
         }
 
-        .message.sent,
-        .message.received {
-            background: transparent;
-            margin-left: 0;
-            margin-right: 0;
-            text-align: left;
+        body.whatsapp-mode .message-container.sent {
+            align-self: flex-end;
+            align-items: flex-end;
         }
 
-        .message .user {
-            font-weight: 600;
-            color: #333;
-            font-size: 13px;
+        body.whatsapp-mode .message-container.received {
+            align-self: flex-start;
+            align-items: flex-start;
+        }
+
+        body.whatsapp-mode .bubble {
+            padding: 6px 7px 8px 9px;
+            border-radius: 7.5px;
+            box-shadow: 0 1px 0.5px rgba(0, 0, 0, 0.13);
+            position: relative;
+            font-size: 14.2px;
+            line-height: 19px;
+            color: #111b21;
+        }
+
+        body.whatsapp-mode .message-container.sent .bubble {
+            background: var(--wa-sent);
+            border-radius: 7.5px 0 7.5px 7.5px;
+        }
+
+        body.whatsapp-mode .message-container.received .bubble {
+            background: var(--wa-received);
+            border-radius: 0 7.5px 7.5px 7.5px;
+        }
+
+        body.whatsapp-mode .bubble .user-name {
+            font-size: 12.8px;
+            font-weight: 500;
+            color: #d15663;
+            /* Randomize in future */
             margin-bottom: 2px;
+            cursor: pointer;
+        }
+
+        body.whatsapp-mode .bubble .meta {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: -4px;
+            margin-left: 10px;
+            /* Space for text */
+        }
+
+        body.whatsapp-mode .bubble .time {
+            font-size: 11px;
+            color: #667781;
+            white-space: nowrap;
+        }
+
+        /* Footer */
+        body.whatsapp-mode footer {
+            background: var(--wa-input-bg);
+            padding: 8px 10px;
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: 10px;
+            position: relative;
+            /* For reply bar positioning context if needed */
+            flex-direction: row;
+            flex-wrap: wrap;
+            /* Allow wrapping for reply bar */
         }
 
-        .user-avatar-small {
-            width: 18px;
-            height: 18px;
+        /* Force input row to take full width when reply bar is present */
+        .input-row {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            gap: 10px;
+        }
+
+        body.whatsapp-mode footer input {
+            flex: 1;
+            padding: 9px 12px;
+            border-radius: 8px;
+            border: 1px solid #fff;
+            background: #fff;
+            outline: none;
+            font-size: 15px;
+        }
+
+        /* Make reply bar take full width of footer */
+        .reply-preview-bar {
+            width: 100%;
+            margin: 0 0 5px 0;
+            order: -1;
+            /* Show above input */
+        }
+
+        body.whatsapp-mode .send-btn {
+            background: #00a884;
+            color: white;
+            border: none;
             border-radius: 50%;
-            background: #ffcc00;
-            font-size: 10px;
+            width: 40px;
+            height: 40px;
             display: flex;
             align-items: center;
             justify-content: center;
+            cursor: pointer;
+        }
+
+        /* Elements unique to WhatsApp */
+        .whatsapp-only {
+            display: block;
+        }
+
+        .notepad-only {
+            display: none !important;
+        }
+
+        /* Modals (Shared but styled for WA) */
+        body.whatsapp-mode .modal-content {
+            border-radius: 3px;
+            box-shadow: 0 17px 50px 0 rgba(11, 20, 26, .19), 0 12px 15px 0 rgba(11, 20, 26, .24);
+            border: none;
+            background: white;
+        }
+
+        /* --- Dark Mode for WhatsApp --- */
+        body.whatsapp-mode.dark-mode {
+            --wa-header: rgba(32, 44, 51, var(--bg-opacity, 1));
+            --wa-bg: rgba(11, 20, 26, var(--bg-opacity, 1));
+            --wa-input-bg: rgba(32, 44, 51, var(--bg-opacity, 1));
+            --wa-sent: rgba(0, 92, 75, var(--bg-opacity, 1));
+            --wa-received: rgba(32, 44, 51, var(--bg-opacity, 1));
+            --bg-pattern: rgba(11, 20, 26, var(--bg-opacity, 1));
+            color: #e9edef;
+        }
+
+        body.whatsapp-mode.dark-mode #app-container {
+            background: var(--wa-bg);
+        }
+
+        body.whatsapp-mode.dark-mode header {
+            background: var(--wa-header);
+            box-shadow: none;
+            border-bottom: 1px solid rgba(134, 150, 160, 0.15);
+        }
+
+        body.whatsapp-mode.dark-mode .bubble {
+            color: #e9edef;
+            box-shadow: none;
+        }
+
+        body.whatsapp-mode.dark-mode .bubble .user-name {
+            color: #53bdeb;
+        }
+
+        body.whatsapp-mode.dark-mode .bubble .time {
+            color: #8696a0;
+        }
+
+        body.whatsapp-mode.dark-mode footer {
+            background: var(--wa-header);
+            border-top: 1px solid rgba(134, 150, 160, 0.15);
+        }
+
+        body.whatsapp-mode.dark-mode footer input {
+            background: #2a3942;
+            border: none;
+            color: #d1d7db;
+        }
+
+        body.whatsapp-mode.dark-mode .icon-btn {
+            color: #aebac1;
+        }
+
+        body.whatsapp-mode.dark-mode .modal-content {
+            background: #3b4a54;
+            color: #e9edef;
+        }
+
+        body.whatsapp-mode.dark-mode .menu-dropdown {
+            background: #233138;
+            border: 1px solid rgba(134, 150, 160, 0.15);
+            color: #d1d7db;
+        }
+
+        body.whatsapp-mode.dark-mode .dropdown-item:hover {
+            background: #182229;
+        }
+
+        body.whatsapp-mode.dark-mode input {
+            color: #d1d7db;
+        }
+
+        /* --- Reply Styles (WhatsApp Mode) --- */
+        .reply-preview-bar {
+            background: #f0f0f0;
+            padding: 5px 10px;
+            border-left: 4px solid #00a884;
+            margin: 0 10px 5px 10px;
+            border-radius: 4px;
+            display: none;
+            position: relative;
+        }
+
+        body.whatsapp-mode.dark-mode .reply-preview-bar {
+            background: #1f2c34;
+            color: #e9edef;
+        }
+
+        .reply-preview-bar .sender {
+            font-weight: bold;
+            color: #00a884;
+            font-size: 12px;
+        }
+
+        .reply-preview-bar .text {
+            font-size: 13px;
+            color: #666;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        body.whatsapp-mode.dark-mode .reply-preview-bar .text {
+            color: #8696a0;
+        }
+
+        .reply-preview-bar .close-reply {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #666;
+        }
+
+        /* Quoted Message inside Bubble */
+        .quoted-message {
+            background: rgba(0, 0, 0, 0.05);
+            /* Light gray quote */
+            border-left: 4px solid #00a884;
+            /* Green accent */
+            padding: 4px 6px;
+            border-radius: 4px;
+            margin-bottom: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        body.whatsapp-mode.dark-mode .quoted-message {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .quoted-message .sender {
+            font-weight: bold;
+            color: #00a884;
+            margin-bottom: 2px;
+        }
+
+        .quoted-message .text {
+            color: #555;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        body.whatsapp-mode.dark-mode .quoted-message .text {
+            color: #ccc;
+        }
+    </style>
+
+    <!-- ========================================= -->
+    <!-- 📝 2. NOTEPAD THEME CSS                   -->
+    <!-- ========================================= -->
+    <style id="notepad-css">
+        body.notepad-mode {
+            background: #ffffff;
+            margin: 0;
+            font-family: 'Consolas', 'Lucida Console', monospace;
+            font-size: 13px;
+            color: #000;
             overflow: hidden;
         }
 
-        .user-avatar-small img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .message .text {
-            color: #333;
-            font-size: 14px;
-            line-height: 20px;
-            margin: 2px 0;
-        }
-
-        .timestamp {
-            font-size: 11px;
-            color: #999;
-            margin-top: 2px;
-        }
-
-        /* Input Area */
-        footer {
-            padding: 5px;
-            background: #eee;
+        body.notepad-mode #app-container {
             display: flex;
-            border-top: 1px solid #ccc;
+            flex-direction: column;
+            height: 100vh;
+            background: rgba(255, 255, 255, var(--bg-opacity, 1));
+            backdrop-filter: blur(8px);
+            border: 1px solid #ccc;
         }
 
-        .emoji-btn {
+        /* Header (Minimal) */
+        body.notepad-mode header {
+            background: rgba(255, 255, 255, var(--bg-opacity, 1));
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 8px;
+            border-bottom: 1px solid #f0f0f0;
+            -webkit-app-region: drag;
+        }
+
+        body.notepad-mode .header-left h1 {
+            font-size: 12px;
+            font-weight: normal;
+            color: #333;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* Hide WhatsApp elements */
+        body.notepad-mode .avatar,
+        body.notepad-mode #search-btn,
+        body.notepad-mode .send-btn,
+        body.notepad-mode .emoji-btn {
+            display: none !important;
+        }
+
+        body.notepad-mode .icon-btn {
+            color: #000;
+            font-size: 14px;
             background: transparent;
             border: none;
-            font-size: 1.3rem;
             cursor: pointer;
-            padding: 5px 8px;
-            margin-left: 0;
-            margin-right: 5px;
+            padding: 2px 8px;
+            -webkit-app-region: no-drag;
         }
 
-        .emoji-btn:hover {
-            background: rgba(0, 0, 0, 0.05);
-            border-radius: 4px;
+        body.notepad-mode .icon-btn:hover {
+            background: #eee;
         }
 
-        input {
+        body.notepad-mode .icon-btn.close:hover {
+            background: #e81123;
+            color: white;
+        }
+
+        /* Menu Bar (Notepad Exclusive) */
+        body.notepad-mode .notepad-menubar {
+            display: flex;
+            background: rgba(255, 255, 255, var(--bg-opacity, 1));
+            padding: 2px 0;
+            border-bottom: 1px solid #eee;
+            font-size: 11px;
+            -webkit-app-region: no-drag;
+        }
+
+        body.notepad-mode .menu-item {
+            padding: 2px 6px;
+            cursor: pointer;
+            color: #000;
+        }
+
+        body.notepad-mode .menu-item:hover {
+            background: #cce8ff;
+        }
+
+        /* Chat Area */
+        body.notepad-mode #chat-content {
             flex: 1;
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-family: inherit;
+            padding: 5px;
+            overflow-y: auto;
+            background: rgba(255, 255, 255, var(--bg-opacity, 1));
+            cursor: text;
         }
 
-        button {
-            margin-left: 5px;
-            padding: 8px 12px;
-            background: #ffcc00;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-family: inherit;
+        body.notepad-mode .message-line {
+            white-space: pre-wrap;
+            margin-bottom: 2px;
+            line-height: 1.4;
+        }
+
+        body.notepad-mode .message-line .sender {
+            margin-right: 5px;
             font-weight: bold;
+            color: #000;
         }
 
-        button:hover {
-            background: #e6b800;
+        body.notepad-mode .message-line .text {
+            color: #000;
+        }
+
+        body.notepad-mode .message-line .time {
+            color: #888;
+            font-size: 0.9em;
+            margin-left: 5px;
+        }
+
+        /* Footer */
+        body.notepad-mode footer {
+            padding: 0;
+            background: rgba(255, 255, 255, var(--bg-opacity, 1));
+            border-top: 1px solid #eee;
+            /* Status bar look */
+        }
+
+        body.notepad-mode input {
+            width: 100%;
+            border: none;
+            outline: none;
+            padding: 5px;
+            font-family: inherit;
+            font-size: inherit;
         }
 
         /* Scrollbar */
-        ::-webkit-scrollbar {
-            width: 6px;
+        body.notepad-mode ::-webkit-scrollbar {
+            width: 10px;
         }
 
-        ::-webkit-scrollbar-thumb {
+        body.notepad-mode ::-webkit-scrollbar-thumb {
             background: #ccc;
-            border-radius: 3px;
+            border: 2px solid #fff;
         }
 
-        /* Emoji Picker */
-        .emoji-picker {
-            position: absolute;
-            bottom: 60px;
-            left: 10px;
-            background: #fff;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            padding: 10px;
-            display: none;
-            max-width: 280px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            z-index: 1000;
-        }
-
-        .emoji-picker.show {
+        /* Elements visibility */
+        .notepad-only {
             display: block;
         }
 
-        .emoji-grid {
-            display: grid;
-            grid-template-columns: repeat(8, 1fr);
-            gap: 5px;
-            max-height: 200px;
-            overflow-y: auto;
+        /* --- Taskbar Mode CSS --- */
+        body.taskbar-mode {
+            background: transparent;
+            overflow: hidden;
         }
 
-        .emoji-item {
-            font-size: 1.3rem;
-            cursor: pointer;
-            padding: 5px;
-            text-align: center;
-            border-radius: 4px;
-            transition: background 0.2s;
+        body.taskbar-mode #app-container {
+            background: transparent;
+            border: none;
+            backdrop-filter: none;
         }
 
-        .emoji-item:hover {
-            background: #f0f0f0;
+        /* Hide specific elements in Taskbar Mode */
+        body.taskbar-mode header,
+        body.taskbar-mode #chat-content,
+        body.taskbar-mode .notepad-menubar,
+        body.taskbar-mode .emoji-btn,
+        body.taskbar-mode .send-btn,
+        body.taskbar-mode .modal {
+            display: none !important;
         }
 
-        /* Menu Dropdown */
-        .menu-dropdown {
-            position: absolute;
-            top: 50px;
-            right: 10px;
-            background: white;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        /* Taskbar Footer (The Search Bar) */
+        body.taskbar-mode footer {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 24px;
+            /* Pill shape like Windows 11 Search */
+            padding: 0 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin: 0;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            -webkit-app-region: drag;
+            /* Make draggable */
+            border: 1px solid #dcdcdc;
+            transition: all 0.3s;
+        }
+
+        body.taskbar-mode.dark-mode footer {
+            background: rgba(43, 43, 43, 0.95);
+            border: 1px solid #444;
+        }
+
+        /* Taskbar Input */
+        body.taskbar-mode footer input {
+            background: transparent;
+            border: none;
+            outline: none;
+            height: 100%;
+            font-size: 14px;
+            color: inherit;
+            pointer-events: auto;
+            -webkit-app-region: no-drag;
+            padding-left: 10px;
+        }
+
+        /* Expand Button (Taskbar only) */
+        .expand-btn {
             display: none;
-            z-index: 1500;
-            min-width: 150px;
+            cursor: pointer;
+            font-size: 16px;
+            -webkit-app-region: no-drag;
+            color: #666;
+            margin-right: 5px;
         }
 
-        .menu-dropdown.show {
+        body.taskbar-mode .expand-btn {
             display: block;
         }
 
-        .menu-item {
-            padding: 10px 15px;
-            cursor: pointer;
-            border-bottom: 1px solid #f0f0f0;
-            font-size: 13px;
+        body.taskbar-mode.dark-mode .expand-btn {
+            color: #ccc;
         }
 
-        .menu-item:last-child {
-            border-bottom: none;
+        /* --- Dark Mode for Notepad --- */
+        body.notepad-mode.dark-mode {
+            background: transparent;
+            color: #d4d4d4;
         }
 
-        .menu-item:hover {
-            background: #f6f6f6;
+        body.notepad-mode.dark-mode #app-container {
+            background: rgba(30, 30, 30, var(--bg-opacity, 1));
+            border-color: #444;
         }
 
-        /* Modal */
+        body.notepad-mode.dark-mode header {
+            background: rgba(45, 45, 45, var(--bg-opacity, 1));
+            border-bottom: 1px solid #444;
+        }
+
+        body.notepad-mode.dark-mode .header-left h1 {
+            color: #d4d4d4;
+        }
+
+        body.notepad-mode.dark-mode .menu-item {
+            color: #ccc;
+        }
+
+        body.notepad-mode.dark-mode .notepad-menubar {
+            background: rgba(45, 45, 45, var(--bg-opacity, 1));
+            border-bottom: 1px solid #444;
+        }
+
+        body.notepad-mode.dark-mode .menu-item:hover {
+            background: #3e3e42;
+        }
+
+        body.notepad-mode.dark-mode #chat-content {
+            background: rgba(30, 30, 30, var(--bg-opacity, 1));
+            color: #d4d4d4;
+        }
+
+        body.notepad-mode.dark-mode .message-line .sender {
+            color: #569cd6;
+        }
+
+        body.notepad-mode.dark-mode .message-line .text {
+            color: #d4d4d4;
+        }
+
+        body.notepad-mode.dark-mode footer {
+            background: rgba(45, 45, 45, var(--bg-opacity, 1));
+            border-top: 1px solid #444;
+        }
+
+        body.notepad-mode.dark-mode input {
+            background: rgba(45, 45, 45, var(--bg-opacity, 1));
+            color: #d4d4d4;
+        }
+
+        body.notepad-mode.dark-mode .icon-btn {
+            color: #ccc;
+        }
+
+        body.notepad-mode.dark-mode .icon-btn:hover {
+            background: #3e3e42;
+        }
+    </style>
+
+    <!-- Shared Styles (Modals) -->
+    <style>
         .modal {
+            display: none;
             position: fixed;
             top: 0;
             left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            display: none;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 2000;
             align-items: center;
             justify-content: center;
-            z-index: 2000;
         }
 
         .modal.show {
@@ -352,639 +696,455 @@
 
         .modal-content {
             background: white;
-            width: 90%;
-            max-width: 350px;
-            border-radius: 8px;
-            overflow: hidden;
-            max-height: 90vh;
-            overflow-y: auto;
+            padding: 20px;
+            width: 300px;
+            border-radius: 4px;
         }
 
         .modal-header {
-            background: #f5f5f5;
-            border-bottom: 1px solid #ddd;
-            padding: 12px 15px;
             display: flex;
             justify-content: space-between;
-            align-items: center;
-        }
-
-        .modal-header h2 {
-            font-size: 16px;
-            color: #333;
-        }
-
-        .close-btn {
-            background: transparent;
-            border: none;
-            font-size: 24px;
-            cursor: pointer;
-            width: auto;
-            height: auto;
-            color: #333;
-        }
-
-        .modal-body {
-            padding: 20px;
-        }
-
-        .profile-section {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        .profile-avatar {
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-            background: #ffcc00;
-            margin: 0 auto 15px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 50px;
-            cursor: pointer;
-            overflow: hidden;
-        }
-
-        .profile-avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .edit-avatar-btn {
-            font-size: 12px;
-            color: #666;
-            cursor: pointer;
-            text-decoration: underline;
-        }
-
-        .form-group {
             margin-bottom: 15px;
         }
 
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-size: 13px;
-            color: #666;
-        }
-
-        .form-group input,
-        .form-group textarea {
+        .modal-body button {
             width: 100%;
             padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-size: 13px;
-            font-family: inherit;
-        }
-
-        .form-group textarea {
-            resize: vertical;
-            min-height: 60px;
-        }
-
-        .save-btn {
-            width: 100%;
-            background: #ffcc00;
-            color: #333;
-            padding: 10px;
-            border: none;
-            border-radius: 4px;
-            font-size: 14px;
-            cursor: pointer;
             margin-top: 10px;
-            font-weight: bold;
+            cursor: pointer;
         }
 
-        .save-btn:hover {
-            background: #e6b800;
+        .menu-dropdown {
+            position: absolute;
+            right: 10px;
+            top: 50px;
+            background: white;
+            border: 1px solid #ddd;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            display: none;
+            z-index: 1000;
         }
 
-        .settings-section {
-            margin-bottom: 20px;
+        .menu-dropdown.show {
+            display: block;
         }
 
-        .settings-section h3 {
-            font-size: 13px;
-            color: #666;
-            margin-bottom: 10px;
-            text-transform: uppercase;
-        }
-
-        .setting-item {
-            padding: 12px;
-            background: #f6f6f6;
-            border-radius: 4px;
-            margin-bottom: 8px;
+        .dropdown-item {
+            padding: 10px 15px;
             cursor: pointer;
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 13px;
-        }
-
-        .setting-item:hover {
-            background: #e8e8e8;
-        }
-
-        .background-options {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
             gap: 8px;
-            margin-top: 10px;
+            align-items: center;
         }
 
-        .bg-option {
-            height: 60px;
-            border-radius: 4px;
-            cursor: pointer;
-            border: 2px solid transparent;
-            transition: border 0.2s;
-        }
-
-        .bg-option.selected {
-            border-color: #ffcc00;
-        }
-
-        .bg-default {
-            background: #ffffff;
-            border: 1px solid #ccc;
-        }
-
-        .bg-light-yellow {
-            background: #fffef0;
-        }
-
-        .bg-light-blue {
-            background: #f0f8ff;
-        }
-
-        .bg-light-green {
-            background: #f0fff0;
-        }
-
-        .bg-light-pink {
-            background: #fff0f5;
-        }
-
-        .bg-dark {
-            background: #1a1a1a;
-        }
-
-        .hidden {
-            display: none !important;
+        .dropdown-item:hover {
+            background: #f0f0f0;
         }
     </style>
 </head>
 
-<body>
+<!-- Default start in WhatsApp mode, JS will toggle -->
+
+<body class="whatsapp-mode">
     <div id="app-container">
+
+        <!-- Header -->
         <header>
             <div class="header-left">
-                <div class="avatar" id="header-avatar" onclick="openProfile()">
-                    👤
+                <!-- WA Avatar -->
+                <div class="avatar whatsapp-only" onclick="openProfile()">
+                    <span id="avatar-emoji">👤</span>
                 </div>
-                <h1>📝 Notepad Chat</h1>
+                <!-- Notepad Icon -->
+                <span class="notepad-only" style="font-size: 16px;">📄</span>
+
+                <h1 id="app-title">Notepad Messenger</h1>
             </div>
+
             <div class="header-icons">
-                <button class="icon-btn" onclick="toggleSearch()" title="Search">🔍</button>
-                <button class="icon-btn" onclick="toggleMenu()" title="Menu">⋮</button>
-                <div class="controls">
-                    <span onclick="minimizeWindow()">_</span>
-                    <span onclick="window.close()">X</span>
-                </div>
+                <!-- WA Icons -->
+                <button class="icon-btn whatsapp-only" id="search-btn" title="Search">🔍</button>
+                <button class="icon-btn whatsapp-only" onclick="toggleMenu()" title="Menu">⋮</button>
+
+                <!-- Window Controls (Shared but styled differently) -->
+                <button class="icon-btn" id="min-btn">─</button>
+                <button class="icon-btn close" id="close-btn">✕</button>
             </div>
         </header>
 
-        <!-- Search Bar -->
-        <div id="search-bar">
-            <input type="text" id="search-input" placeholder="Search messages..." oninput="searchMessages()">
+        <!-- Notepad Menu Bar (Only visible in Notepad Mode) -->
+        <div class="notepad-menubar notepad-only">
+            <div class="menu-item" onclick="toggleUIMode()">View</div> <!-- Switcher here -->
+            <div class="menu-item" onclick="clearChat()">Edit</div>
+            <div class="menu-item" onclick="toggleDarkMode()">Theme</div>
+            <div class="menu-item" onclick="toggleTaskbarMode()">Dock</div>
+            <div class="menu-item">Format</div>
+            <div class="menu-item">Help</div>
         </div>
 
-        <!-- Menu Dropdown -->
-        <div id="menu-dropdown" class="menu-dropdown">
-            <div class="menu-item" onclick="openProfile()">👤 Profile</div>
-            <div class="menu-item" onclick="openSettings()">⚙️ Settings</div>
-            <div class="menu-item" onclick="clearChat()">🗑️ Clear Chat</div>
+        <!-- WA Menu Dropdown -->
+        <div id="wa-menu" class="menu-dropdown">
+            <div class="dropdown-item" onclick="openProfile()">👤 Profile</div>
+            <div class="dropdown-item" onclick="toggleUIMode()">📝 Switch to Notepad</div>
+            <div class="dropdown-item" onclick="toggleTaskbarMode()">🪟 Taskbar Mode</div>
+            <div class="dropdown-item" onclick="toggleDarkMode()">🌙 Toggle Dark Mode</div>
+            <div class="dropdown-item" onclick="openSettings()">⚙️ Settings</div>
+            <div class="dropdown-item" onclick="clearChat()">🗑️ Clear Chat</div>
         </div>
 
+        <!-- Content -->
         <div id="chat-content">
-            <!-- Messages from Socket.IO go here -->
+            <!-- Messages injected here -->
         </div>
 
+        <!-- Footer -->
         <footer>
-            <button class="emoji-btn" onclick="toggleEmojiPicker()">😊</button>
-            <input type="text" id="msg-input" placeholder="Type a message..." autofocus>
-            <button onclick="sendMessage()">Send</button>
-        </footer>
+            <!-- Reply Preview Bar (Injected here via JS or simple absolute div) -->
+            <div id="reply-preview" class="reply-preview-bar">
+                <div class="sender" id="reply-sender">Sender Name</div>
+                <div class="text" id="reply-text">Message text...</div>
+                <span class="close-reply" onclick="cancelReply()">✕</span>
+            </div>
 
-        <!-- Emoji Picker Popup -->
-        <div id="emoji-picker" class="emoji-picker">
-            <div class="emoji-grid" id="emoji-grid"></div>
-        </div>
+            <!-- Expand Button for Taskbar Mode -->
+            <button class="icon-btn expand-btn" onclick="toggleTaskbarMode()" title="Expand to Normal Mode">⤢</button>
+
+            <div class="input-row"> <!-- Wrapper for Flex Layout -->
+                <button class="icon-btn emoji-btn whatsapp-only">😊</button>
+                <input type="text" id="msg-input" placeholder="Type a message..." autocomplete="off">
+                <button class="send-btn whatsapp-only" onclick="sendMessage()">➤</button>
+            </div>
+        </footer>
     </div>
 
-    <!-- Profile Modal -->
+    <!-- Hidden Profile Modal -->
     <div id="profile-modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>Profile</h2>
-                <button class="close-btn" onclick="closeProfile()">×</button>
+                <h3>Profile</h3>
+                <button onclick="document.getElementById('profile-modal').classList.remove('show')">✕</button>
             </div>
             <div class="modal-body">
-                <div class="profile-section">
-                    <div class="profile-avatar" id="profile-avatar"
-                        onclick="document.getElementById('avatar-input').click()">
-                        👤
-                    </div>
-                    <div class="edit-avatar-btn">Click to change avatar</div>
-                    <input type="file" id="avatar-input" accept="image/*" style="display: none;"
-                        onchange="uploadAvatar(event)">
-                </div>
-                <div class="form-group">
-                    <label>Username</label>
-                    <input type="text" id="username-input" placeholder="Enter your name">
-                </div>
-                <div class="form-group">
-                    <label>Bio / About</label>
-                    <textarea id="bio-input" placeholder="Hey there! I'm using Notepad Messenger"></textarea>
-                </div>
-                <button class="save-btn" onclick="saveProfile()">Save Profile</button>
+                <input type="text" id="username-input" placeholder="Username"
+                    style="width: 100%; margin-bottom: 10px; padding: 5px;">
+                <button onclick="saveProfile()">Save</button>
             </div>
         </div>
     </div>
 
-    <!-- Settings Modal -->
+    <!-- Hidden Settings Modal -->
     <div id="settings-modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>Settings</h2>
-                <button class="close-btn" onclick="closeSettings()">×</button>
+                <h3>Settings</h3>
+                <button onclick="document.getElementById('settings-modal').classList.remove('show')">✕</button>
             </div>
             <div class="modal-body">
-                <div class="settings-section">
-                    <h3>Background</h3>
-                    <div class="background-options">
-                        <div class="bg-option bg-default" onclick="changeBackground('default')" data-bg="default"></div>
-                        <div class="bg-option bg-light-yellow" onclick="changeBackground('light-yellow')"
-                            data-bg="light-yellow"></div>
-                        <div class="bg-option bg-light-blue" onclick="changeBackground('light-blue')"
-                            data-bg="light-blue"></div>
-                        <div class="bg-option bg-light-green" onclick="changeBackground('light-green')"
-                            data-bg="light-green"></div>
-                        <div class="bg-option bg-light-pink" onclick="changeBackground('light-pink')"
-                            data-bg="light-pink"></div>
-                        <div class="bg-option bg-dark" onclick="changeBackground('dark')" data-bg="dark"></div>
-                    </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">Background Opacity: <span
+                            id="opacity-value">100%</span></label>
+                    <input type="range" id="opacity-slider" min="0.2" max="1.0" step="0.01" value="1"
+                        style="width: 100%;" oninput="updateOpacity(this.value)">
+                    <div style="font-size: 11px; color: #666; margin-top: 5px;">Adjust for a plastic/glass effect.</div>
                 </div>
-                <div class="settings-section">
-                    <h3>Actions</h3>
-                    <div class="setting-item" onclick="clearChat()">
-                        🗑️ Clear All Chats
-                    </div>
+
+                <hr style="border: 0; border-top: 1px solid #eee; margin: 15px 0;">
+
+                <div style="margin-bottom: 10px;">
+                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                        <span>Dark Mode</span>
+                        <input type="checkbox" id="dark-mode-toggle" onchange="toggleDarkMode()">
+                    </label>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // Electron Renderer + Socket Code
-        const { io } = require("socket.io-client");
-        const { ipcRenderer } = require("electron");
-        const path = require("path");
-
-        // Connect to Deployed Backend
+        const { ipcRenderer } = require('electron');
         const socket = io("https://sample-template-bxgm.onrender.com");
 
-        const chatContent = document.getElementById('chat-content');
-        const input = document.getElementById('msg-input');
-        const roomId = 'global-room';
+        // State
+        const MODES = { WA: 'whatsapp-mode', NOTE: 'notepad-mode', TASKBAR: 'taskbar-mode' };
+        let currentMode = localStorage.getItem('uiMode') || MODES.WA;
+        let isTaskbarMode = false; // Separate flag for "docked" state
+        let isDarkMode = localStorage.getItem('isDarkMode') === 'true';
+        let bgOpacity = parseFloat(localStorage.getItem('bgOpacity')) || 1.0;
 
-        // User Profile Data
         let userProfile = JSON.parse(localStorage.getItem('userProfile')) || {
             username: `User_${Math.floor(Math.random() * 1000)}`,
-            bio: "Hey there! I'm using Notepad Messenger",
             avatar: null
         };
-
-        let username = userProfile.username;
+        let userProfile = JSON.parse(localStorage.getItem('userProfile')) || {
+            username: `User_${Math.floor(Math.random() * 1000)}`,
+            avatar: null
+        };
         let allMessages = [];
-        let currentBackground = localStorage.getItem('chatBackground') || 'default';
+        let replyingTo = null; // Stores message object being replied to
+
+        // Elements
+        const body = document.body;
+        const chatContent = document.getElementById('chat-content');
+        const input = document.getElementById('msg-input');
+        const title = document.getElementById('app-title');
 
         // Initialize
         window.onload = () => {
-            loadUserProfile();
-            applyBackground(currentBackground);
-            highlightSelectedBackground();
+            applyMode(currentMode);
+            applySettings(); // Apply opacity
+            loadProfile();
+
+            // Window controls
+            document.getElementById('min-btn').onclick = () => ipcRenderer.send('minimize-window');
+            document.getElementById('close-btn').onclick = () => window.close();
         };
 
-        // Window Controls
-        function minimizeWindow() {
-            ipcRenderer.send('minimize-window');
+        // --- UI SWITCHING LOGIC ---
+        function toggleUIMode() {
+            if (isTaskbarMode) toggleTaskbarMode(); // Exit taskbar mode first
+            currentMode = (currentMode === MODES.WA) ? MODES.NOTE : MODES.WA;
+            localStorage.setItem('uiMode', currentMode);
+            applyMode(currentMode);
+            // Hide menu if open
+            document.getElementById('wa-menu').classList.remove('show');
         }
 
-        // Emoji Picker
-        const emojis = [
-            '😀', '😃', '😄', '😁', '😆', '😅', '😂', '🤣',
-            '😊', '😇', '🙂', '🙃', '😉', '😌', '😍', '🥰',
-            '😘', '😗', '😙', '😚', '😋', '😛', '😝', '😜',
-            '🤪', '🤨', '🧐', '🤓', '😎', '🤩', '🥳', '😏',
-            '😒', '😞', '😔', '😟', '😕', '🙁', '☹️', '😣',
-            '😖', '😫', '😩', '🥺', '😢', '😭', '😤', '😠',
-            '😡', '🤬', '🤯', '😳', '🥵', '🥶', '😱', '😨',
-            '😰', '😥', '😓', '🤗', '🤔', '🤭', '🤫', '🤥',
-            '👍', '👎', '👌', '✌️', '🤞', '🤟', '🤘', '🤙',
-            '👏', '🙌', '👐', '🤲', '🤝', '🙏', '✍️', '💪',
-            '❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍',
-            '💔', '❣️', '💕', '💞', '💓', '💗', '💖', '💘',
-            '🎉', '🎊', '🎈', '🎁', '🏆', '🥇', '🥈', '🥉',
-            '⭐', '🌟', '✨', '💫', '🔥', '💯', '✅', '❌'
-        ];
+        function toggleTaskbarMode() {
+            isTaskbarMode = !isTaskbarMode;
 
-        const emojiPicker = document.getElementById('emoji-picker');
-        const emojiGrid = document.getElementById('emoji-grid');
+            // Send IPC to main process to resize/move window
+            ipcRenderer.send('set-mode', isTaskbarMode ? 'taskbar' : 'standard');
 
-        // Populate emoji grid
-        emojis.forEach(emoji => {
-            const span = document.createElement('span');
-            span.className = 'emoji-item';
-            span.textContent = emoji;
-            span.onclick = () => insertEmoji(emoji);
-            emojiGrid.appendChild(span);
-        });
+            if (isTaskbarMode) {
+                // Apply taskbar specific styles
+                body.classList.add('taskbar-mode');
+                // Temporarily override placeholder
+                input.placeholder = "Type here to search...";
 
-        function toggleEmojiPicker() {
-            emojiPicker.classList.toggle('show');
-        }
-
-        function insertEmoji(emoji) {
-            input.value += emoji;
-            input.focus();
-            emojiPicker.classList.remove('show');
-        }
-
-        // Close emoji picker and menu when clicking outside
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('.emoji-picker') && !e.target.closest('.emoji-btn')) {
-                emojiPicker.classList.remove('show');
+            } else {
+                // Revert to normal
+                body.classList.remove('taskbar-mode');
+                input.placeholder = "Type a message...";
+                applyMode(currentMode); // Restore base mode classes
             }
-            if (!e.target.closest('.menu-dropdown') && !e.target.closest('.icon-btn')) {
-                document.getElementById('menu-dropdown').classList.remove('show');
-            }
-        });
 
-        // Socket Handlers
-        socket.emit('join_room', { roomId, username });
+            // Hide menu if open
+            document.getElementById('wa-menu').classList.remove('show');
+        }
 
-        socket.on('history', (messages) => {
-            allMessages = messages;
-            renderMessages(messages);
+        function toggleDarkMode() {
+            isDarkMode = !isDarkMode;
+            localStorage.setItem('isDarkMode', isDarkMode);
+            applyMode(currentMode);
+            // Update menu text if needed or just re-render
+        }
+
+        function applyMode(mode) {
+            body.className = isDarkMode ? `${mode} dark-mode` : mode;
+
+            // Update Title
+            title.textContent = (mode === MODES.NOTE) ? "Untitled - Notepad" : "Notepad Messenger";
+
+            // Re-render messages with new style
+            renderMessages(allMessages);
+
+            // Scroll to bottom
+            setTimeout(() => chatContent.scrollTop = chatContent.scrollHeight, 50);
+        }
+
+        // --- MESSAGING LOGIC ---
+        socket.emit('join_room', { roomId: 'global-room', username: userProfile.username });
+
+        socket.on('history', (msgs) => {
+            allMessages = msgs;
+            renderMessages(msgs);
         });
 
         socket.on('receive_message', (msg) => {
             allMessages.push(msg);
-            addMessageToUI(msg);
-            // Show notification if message is from someone else
-            showNotification(msg);
-        });
+            appendMessage(msg);
 
-        socket.on('system_alert', (text) => {
-            const div = document.createElement('div');
-            div.style.textAlign = 'center';
-            div.style.color = 'red';
-            div.textContent = text;
-            chatContent.appendChild(div);
+            // Notification
+            const isHidden = document.hidden || !document.hasFocus();
+            if (isHidden && msg.sender !== userProfile.username) {
+                new Notification('Message', { body: msg.text }).onclick = () => ipcRenderer.send('focus-window');
+                ipcRenderer.send('flash-frame');
+            }
         });
 
         socket.on('chat_cleared', () => {
-            chatContent.innerHTML = '';
             allMessages = [];
+            chatContent.innerHTML = '';
         });
 
-        // Send Message
         function sendMessage() {
             const text = input.value.trim();
             if (!text) return;
 
             const msgData = {
-                roomId,
-                sender: username,
+                roomId: 'global-room',
+                sender: userProfile.username,
                 text: text,
                 timestamp: new Date(),
                 avatar: userProfile.avatar
             };
 
+            const msgData = {
+                roomId: 'global-room',
+                sender: userProfile.username,
+                text: text,
+                timestamp: new Date(),
+                avatar: userProfile.avatar,
+                replyTo: replyingTo ? {
+                    sender: replyingTo.sender,
+                    text: replyingTo.text
+                } : null
+            };
+
             socket.emit('send_message', msgData);
             input.value = '';
+            cancelReply(); // Clear reply state
         }
 
-        // Enter Key
         input.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') sendMessage();
         });
 
-        // Render Messages
-        function renderMessages(messages) {
+        // --- RENDERING ---
+        function renderMessages(msgs) {
             chatContent.innerHTML = '';
-            messages.forEach(msg => addMessageToUI(msg));
+            msgs.forEach(msg => appendMessage(msg));
         }
 
-        function addMessageToUI(msg) {
+        function appendMessage(msg) {
             const div = document.createElement('div');
-            const isMe = msg.sender === username;
-            div.className = `message ${isMe ? 'sent' : 'received'}`;
+            const isMe = msg.sender === userProfile.username;
 
-            const time = new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            if (currentMode === MODES.WA) {
+                // WhatsApp Style Bubble
+                div.className = `message-container ${isMe ? 'sent' : 'received'}`;
+                const time = new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-            const avatarHTML = msg.avatar ? `<img src="${msg.avatar}" alt="">` : (msg.sender.charAt(0).toUpperCase());
+                div.innerHTML = `
+                // WhatsApp Style Bubble
+                div.className = `message - container ${ isMe ? 'sent' : 'received' } `;
+                const time = new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                
+                // Quote Block HTML
+                let quoteHtml = '';
+                if (msg.replyTo) {
+                    quoteHtml = `
+                    < div class="quoted-message" >
+                            <div class="sender">${msg.replyTo.sender}</div>
+                            <div class="text">${escapeHtml(msg.replyTo.text)}</div>
+                        </div >
+                    `;
+                }
 
-            div.innerHTML = `
-                <div class="user">
-                    <div class="user-avatar-small">${avatarHTML}</div>
-                    ${escapeHtml(msg.sender)}
-                </div>
-                <div class="text">${escapeHtml(msg.text)}</div>
-                <div class="timestamp">${time}</div>
-            `;
+                div.innerHTML = `
+                    < div class="bubble" ondblclick = 'startReply(${JSON.stringify(msg).replace(/' / g, "&#39;")
+            }) '>
+                        ${ quoteHtml }
+                        ${ !isMe ? `<div class="user-name">${msg.sender}</div>` : '' }
+                        <div class="text">${escapeHtml(msg.text)}</div>
+                        <div class="meta">
+                            <span class="time">${time}</span>
+                        </div>
+                    </div >
+                `;
+            } else {
+                // Notepad Style Line
+                div.className = 'message-line';
+                div.innerHTML = `< span class="sender" > ${ msg.sender }${ isMe ? '*' : '' }:</span > <span class="text">${escapeHtml(msg.text)}</span>`;
+            }
 
             chatContent.appendChild(div);
             chatContent.scrollTop = chatContent.scrollHeight;
         }
 
         function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
+            return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
         }
 
-        // Profile Functions
-        function loadUserProfile() {
-            document.getElementById('username-input').value = userProfile.username;
-            document.getElementById('bio-input').value = userProfile.bio;
+        // --- MENUS & UTILS ---
+        function toggleMenu() {
+            document.getElementById('wa-menu').classList.toggle('show');
+        }
 
-            if (userProfile.avatar) {
-                document.getElementById('header-avatar').innerHTML = `<img src="${userProfile.avatar}" alt="">`;
-                document.getElementById('profile-avatar').innerHTML = `<img src="${userProfile.avatar}" alt="">`;
+        function openSettings() {
+            document.getElementById('settings-modal').classList.add('show');
+            document.getElementById('wa-menu').classList.remove('show');
+            // Sync toggle
+            document.getElementById('dark-mode-toggle').checked = isDarkMode;
+        }
+
+        function updateOpacity(val) {
+            bgOpacity = parseFloat(val);
+            localStorage.setItem('bgOpacity', bgOpacity);
+            applySettings();
+        }
+
+        function applySettings() {
+            // Apply opacity variable
+            document.documentElement.style.setProperty('--bg-opacity', bgOpacity);
+
+            // Update UI
+            const slider = document.getElementById('opacity-slider');
+            if (slider) slider.value = bgOpacity;
+
+            const label = document.getElementById('opacity-value');
+            if (label) label.textContent = Math.round(bgOpacity * 100) + '%';
+        }
+
+        function clearChat() {
+            if (confirm('Clear all chat history?')) {
+                socket.emit('clear_chat', { roomId: 'global-room' });
             }
         }
 
+        // --- PROFILE ---
         function openProfile() {
-            loadUserProfile();
             document.getElementById('profile-modal').classList.add('show');
-            toggleMenu();
-        }
-
-        function closeProfile() {
-            document.getElementById('profile-modal').classList.remove('show');
-        }
-
-        function uploadAvatar(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const avatarData = e.target.result;
-                userProfile.avatar = avatarData;
-                document.getElementById('header-avatar').innerHTML = `<img src="${avatarData}" alt="">`;
-                document.getElementById('profile-avatar').innerHTML = `<img src="${avatarData}" alt="">`;
-            };
-            reader.readAsDataURL(file);
+            document.getElementById('wa-menu').classList.remove('show');
         }
 
         function saveProfile() {
-            const newUsername = document.getElementById('username-input').value.trim();
-            const newBio = document.getElementById('bio-input').value.trim();
-
-            if (newUsername) {
-                userProfile.username = newUsername;
-                username = newUsername;
-            }
-            userProfile.bio = newBio;
-
-            localStorage.setItem('userProfile', JSON.stringify(userProfile));
-            closeProfile();
-
-            alert('✅ Profile saved successfully!');
-        }
-
-        // Settings Functions
-        function openSettings() {
-            document.getElementById('settings-modal').classList.add('show');
-            highlightSelectedBackground();
-            toggleMenu();
-        }
-
-        function closeSettings() {
-            document.getElementById('settings-modal').classList.remove('show');
-        }
-
-        function changeBackground(bgType) {
-            currentBackground = bgType;
-            localStorage.setItem('chatBackground', bgType);
-            applyBackground(bgType);
-            highlightSelectedBackground();
-        }
-
-        function applyBackground(bgType) {
-            const container = document.getElementById('app-container');
-            const chatContent = document.getElementById('chat-content');
-
-            const backgrounds = {
-                'default': '#ffffff',
-                'light-yellow': '#fffef0',
-                'light-blue': '#f0f8ff',
-                'light-green': '#f0fff0',
-                'light-pink': '#fff0f5',
-                'dark': '#1a1a1a'
-            };
-
-            const bg = backgrounds[bgType] || backgrounds.default;
-            container.style.setProperty('--bg-color', bg);
-            chatContent.style.background = bg;
-
-            // Adjust text color for dark mode
-            if (bgType === 'dark') {
-                chatContent.style.color = '#e0e0e0';
-                document.querySelectorAll('.message .user').forEach(el => el.style.color = '#e0e0e0');
-                document.querySelectorAll('.message .text').forEach(el => el.style.color = '#e0e0e0');
-            } else {
-                chatContent.style.color = '#333';
-                document.querySelectorAll('.message .user').forEach(el => el.style.color = '#333');
-                document.querySelectorAll('.message .text').forEach(el => el.style.color = '#333');
+            const val = document.getElementById('username-input').value.trim();
+            if (val) {
+                userProfile.username = val;
+                localStorage.setItem('userProfile', JSON.stringify(userProfile));
+                location.reload(); // Simple reload to apply name change
             }
         }
 
-        function highlightSelectedBackground() {
-            document.querySelectorAll('.bg-option').forEach(option => {
-                option.classList.remove('selected');
-                if (option.dataset.bg === currentBackground) {
-                    option.classList.add('selected');
-                }
-            });
-        }
-
-        // Search Functions
-        function toggleSearch() {
-            const searchBar = document.getElementById('search-bar');
-            searchBar.classList.toggle('show');
-            if (searchBar.classList.contains('show')) {
-                document.getElementById('search-input').focus();
-            } else {
-                document.getElementById('search-input').value = '';
-                renderMessages(allMessages);
+        function loadProfile() {
+            if (userProfile.avatar) {
+                document.getElementById('avatar-emoji').innerHTML = `< img src = "${userProfile.avatar}" >`;
             }
+            document.getElementById('username-input').value = userProfile.username;
         }
 
-        function searchMessages() {
-            const query = document.getElementById('search-input').value.toLowerCase();
-            if (!query) {
-                renderMessages(allMessages);
-                return;
+        // --- REPLY SYSTEM ---
+        function startReply(msg) {
+            replyingTo = msg;
+            const preview = document.getElementById('reply-preview');
+            document.getElementById('reply-sender').textContent = msg.sender;
+            document.getElementById('reply-text').textContent = msg.text;
+            preview.style.display = 'block';
+            document.getElementById('msg-input').focus();
+        }
+
+        function cancelReply() {
+            replyingTo = null;
+            document.getElementById('reply-preview').style.display = 'none';
+        }
+
+        // Hide menus on click outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.menu-dropdown') && !e.target.closest('.icon-btn')) {
+                document.getElementById('wa-menu').classList.remove('show');
             }
-
-            const filtered = allMessages.filter(msg =>
-                msg.text.toLowerCase().includes(query) ||
-                msg.sender.toLowerCase().includes(query)
-            );
-            renderMessages(filtered);
-        }
-
-        // Clear Chat
-        function clearChat() {
-            if (confirm('Are you sure you want to clear all messages? This will delete them from the database permanently for all users.')) {
-                // Emit clear_chat event to server
-                socket.emit('clear_chat', { roomId });
-                closeSettings();
-                toggleMenu();
-            }
-        }
-
-        // Menu
-        function toggleMenu() {
-            document.getElementById('menu-dropdown').classList.toggle('show');
-        }
-
-        // Desktop Notifications
-        function showNotification(msg) {
-            // Don't notify for own messages
-            if (msg.sender === username) return;
-
-            // Create native notification
-            const notification = new Notification('💬 Notepad Messenger', {
-                body: `${msg.sender}: ${msg.text}`,
-                silent: false,
-                urgency: 'normal'
-            });
-
-            // Click notification to focus window
-            notification.onclick = () => {
-                ipcRenderer.send('focus-window');
-            };
-        }
+        });
     </script>
 </body>
 

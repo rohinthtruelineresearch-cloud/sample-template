@@ -39,7 +39,17 @@ Your Desktop Notepad Messenger now has **all the features** from the mobile app 
 - ✅ Profile access
 - ✅ Clean dropdown interface
 
-### 6. **📋 Notepad-like UI**
+### 6. **📋 UI Mode Switcher (New!)**
+- ✅ Dual-interface design
+- ✅ **WhatsApp Mode**: Rich bubbles, avatars, green header
+- ✅ **Notepad Mode**: Minimalist text editor look (Stealth)
+- ✅ **Dark Mode Support**: Full dark theme for both modes 🌙
+- ✅ **Plastic Transparency**: Adjust opacity for a see-through glass effect 🪟
+- ✅ **Taskbar Dock Mode**: Shrink into a search bar for stealthy messaging 🪟
+- ✅ Switch instantly via Menu or View options
+- ✅ Remembers your last used mode
+
+### 7. **📋 Notepad-like UI (Enhanced)**
 - ✅ Clean, minimal design
 - ✅ Notepad color scheme
 - ✅ Professional appearance
@@ -204,6 +214,9 @@ Your Desktop Notepad Messenger now has **all the features** from the mobile app 
 - ✅ 6 background themes
 - ✅ Settings menu
 - ✅ Clear chat
+- ✅ **Plastic Transparency Layer** 🆕
+- ✅ **Taskbar Search Dock** 🆕
+- ✅ **Reply to Messages** 🆕
 - ✅ Enhanced UI
 - ✅ Database integration
 - ✅ Notifications
