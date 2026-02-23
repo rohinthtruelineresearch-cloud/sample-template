@@ -143,7 +143,6 @@ io.on('connection', (socket) => {
         roomId,
         sender,
         senderId,
-        senderId,
         avatar: avatar || '👤',
         text,
         replyTo,

@@ -875,10 +875,6 @@
             username: `User_${Math.floor(Math.random() * 1000)}`,
             avatar: null
         };
-        let userProfile = JSON.parse(localStorage.getItem('userProfile')) || {
-            username: `User_${Math.floor(Math.random() * 1000)}`,
-            avatar: null
-        };
         let allMessages = [];
         let replyingTo = null; // Stores message object being replied to
 
@@ -986,14 +982,6 @@
                 sender: userProfile.username,
                 text: text,
                 timestamp: new Date(),
-                avatar: userProfile.avatar
-            };
-
-            const msgData = {
-                roomId: 'global-room',
-                sender: userProfile.username,
-                text: text,
-                timestamp: new Date(),
                 avatar: userProfile.avatar,
                 replyTo: replyingTo ? {
                     sender: replyingTo.sender,
@@ -1025,37 +1013,31 @@
                 div.className = `message-container ${isMe ? 'sent' : 'received'}`;
                 const time = new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-                div.innerHTML = `
-                // WhatsApp Style Bubble
-                div.className = `message - container ${ isMe ? 'sent' : 'received' } `;
-                const time = new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                
                 // Quote Block HTML
                 let quoteHtml = '';
                 if (msg.replyTo) {
                     quoteHtml = `
-                    < div class="quoted-message" >
+                        <div class="quoted-message">
                             <div class="sender">${msg.replyTo.sender}</div>
                             <div class="text">${escapeHtml(msg.replyTo.text)}</div>
-                        </div >
+                        </div>
                     `;
                 }
 
                 div.innerHTML = `
-                    < div class="bubble" ondblclick = 'startReply(${JSON.stringify(msg).replace(/' / g, "&#39;")
-            }) '>
-                        ${ quoteHtml }
-                        ${ !isMe ? `<div class="user-name">${msg.sender}</div>` : '' }
+                    <div class="bubble" ondblclick='startReply(${JSON.stringify(msg).replace(/'/g, "&#39;")})'>
+                        ${quoteHtml}
+                        ${!isMe ? `<div class="user-name">${msg.sender}</div>` : ''}
                         <div class="text">${escapeHtml(msg.text)}</div>
                         <div class="meta">
                             <span class="time">${time}</span>
                         </div>
-                    </div >
+                    </div>
                 `;
             } else {
                 // Notepad Style Line
                 div.className = 'message-line';
-                div.innerHTML = `< span class="sender" > ${ msg.sender }${ isMe ? '*' : '' }:</span > <span class="text">${escapeHtml(msg.text)}</span>`;
+                div.innerHTML = `< span class="sender" > ${msg.sender}${isMe ? '*' : ''}:</span > <span class="text">${escapeHtml(msg.text)}</span>`;
             }
 
             chatContent.appendChild(div);
