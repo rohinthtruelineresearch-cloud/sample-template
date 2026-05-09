@@ -135,10 +135,24 @@ io.on('connection', (socket) => {
   });
 
   socket.on('send_message', async (data) => {
-    const { roomId, sender, senderId, avatar, text, replyTo } = data;
+    const { id, roomId, sender, senderId, avatar, text, replyTo, timestamp } = data;
     
+    const msgTimestamp = timestamp || new Date();
+
+    // 1. Broadcast IMMEDIATELY (real-time responsiveness)
+    io.to(roomId).emit('receive_message', {
+      id,
+      roomId,
+      sender,
+      senderId,
+      avatar: avatar || '👤',
+      text,
+      replyTo,
+      timestamp: msgTimestamp
+    });
+
     try {
-      // Save message to database
+      // 2. Save message to database asynchronously
       const newMsg = new Chat({
         roomId,
         sender,
@@ -146,31 +160,14 @@ io.on('connection', (socket) => {
         avatar: avatar || '👤',
         text,
         replyTo,
-        timestamp: new Date()
+        timestamp: msgTimestamp
       });
       
       await newMsg.save();
       console.log(`Message saved to DB: ${roomId} - ${sender}`);
-
-      // Broadcast to Room
-      io.to(roomId).emit('receive_message', {
-        roomId: newMsg.roomId,
-        sender: newMsg.sender,
-        senderId: newMsg.senderId,
-        avatar: newMsg.avatar,
-        text: newMsg.text,
-        replyTo: newMsg.replyTo,
-        timestamp: newMsg.timestamp
-      });
     } catch (error) {
       console.error('Error saving message:', error);
-      // Still broadcast the message even if DB save fails
-      io.to(roomId).emit('receive_message', {
-        roomId,
-        sender,
-        text,
-        timestamp: new Date()
-      });
+      // It was already broadcasted, so users don't see the DB failure delay.
     }
   });
 

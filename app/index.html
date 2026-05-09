@@ -957,6 +957,9 @@
         });
 
         socket.on('receive_message', (msg) => {
+            // Prevent duplicate message if already added via optimistic update
+            if (msg.id && allMessages.some(m => m.id === msg.id)) return;
+
             allMessages.push(msg);
             appendMessage(msg);
 
@@ -977,7 +980,9 @@
             const text = input.value.trim();
             if (!text) return;
 
+            const msgId = Date.now().toString() + Math.random().toString(36).substring(2, 9);
             const msgData = {
+                id: msgId,
                 roomId: 'global-room',
                 sender: userProfile.username,
                 text: text,
@@ -988,6 +993,10 @@
                     text: replyingTo.text
                 } : null
             };
+
+            // Optimistic UI Update: Show instantly!
+            allMessages.push(msgData);
+            appendMessage(msgData);
 
             socket.emit('send_message', msgData);
             input.value = '';

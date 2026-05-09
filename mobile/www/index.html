@@ -716,6 +716,9 @@
         });
 
         socket.on('receive_message', (msg) => {
+            // Prevent duplicate message if already added via optimistic update
+            if (msg.id && allMessages.some(m => m.id === msg.id)) return;
+            
             allMessages.push(msg);
             addMessageToUI(msg);
         });
@@ -739,13 +742,19 @@
             const text = input.value.trim();
             if (!text) return;
 
+            const msgId = Date.now().toString() + Math.random().toString(36).substring(2, 9);
             const msgData = {
+                id: msgId,
                 roomId,
                 sender: username,
                 text: text,
                 timestamp: new Date(),
                 avatar: userProfile.avatar
             };
+
+            // Optimistic UI Update: Show instantly!
+            allMessages.push(msgData);
+            addMessageToUI(msgData);
 
             socket.emit('send_message', msgData);
             input.value = '';
